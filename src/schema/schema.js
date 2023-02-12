@@ -1,5 +1,12 @@
 // import { Projects, Clients } from '../../sampleData.js'
-import { GraphQLObjectType, GraphQLString, GraphQLID, GraphQLSchema, GraphQLList } from 'graphql'
+import {
+    GraphQLObjectType,
+    GraphQLString,
+    GraphQLID,
+    GraphQLSchema,
+    GraphQLNonNull,
+    GraphQLList
+} from 'graphql'
 import ClinetModel from '../models/clientModel.js'
 import ProjectModel from '../models/ProjectModel.js'
 
@@ -30,6 +37,7 @@ const ProjectType = new GraphQLObjectType({
     }
 })
 
+// QUERIES ----------------------------------------------------------------------------
 const RootQuery = new GraphQLObjectType({
     name: 'RootQueryType',
     fields: {
@@ -65,7 +73,62 @@ const RootQuery = new GraphQLObjectType({
         }
     }
 })
+
+// MUTATIONS ----------------------------------------------------------------
+const Mutations = new GraphQLObjectType({
+    name: 'Mutation',
+    fields: {
+        // add a client
+        addClient: {
+            type: ClientType,
+            args: {
+                name: { type: new GraphQLNonNull(GraphQLString) },
+                email: { type: new GraphQLNonNull(GraphQLString) },
+                phone: { type: new GraphQLNonNull(GraphQLString) }
+            },
+            async resolve(parent, args) {
+                return await ClinetModel.create(args)
+            }
+        },
+        // remove a client
+        removeClient: {
+            type: ClientType,
+            args: {
+                id: { type: GraphQLNonNull(GraphQLID) }
+            },
+            async resolve(parent, args) {
+                return await ClinetModel.findByIdAndDelete(args.id)
+            }
+        },
+        // add a project
+        addProject: {
+            type: ProjectType,
+            args: {
+                name: { type: GraphQLNonNull(GraphQLString) },
+                description: { type: GraphQLNonNull(GraphQLString) },
+                status: { type: GraphQLNonNull(GraphQLString) },
+                clientId: { type: GraphQLNonNull(GraphQLID) }
+            },
+            async resolve(parent, args) {
+                return await ProjectModel.create(args)
+            }
+        },
+        // remove a project
+        removeProject: {
+            type: ProjectType,
+            args: {
+                id:{type: GraphQLNonNull(GraphQLID)},
+            },
+            async resolve(parent, args) {
+                return await ProjectModel.findByIdAndDelete(args.id)
+            }
+        }
+    }
+})
+
+// SCHEMA ----------------------------------------------------------------------------
 const schema = new GraphQLSchema({
-    query: RootQuery
+    query: RootQuery,
+    mutation: Mutations
 })
 export default schema
